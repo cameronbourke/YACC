@@ -1,6 +1,6 @@
 
 const Scanner = require('../../Scanner/sol/Scanner');
-const Recognizer = require('../sol/Recognizer');
+const Recognizer = require('../Recognizer');
 
 function testRecognizer (program) {
 	return () => new Recognizer(Scanner(program));

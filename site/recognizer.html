@@ -639,7 +639,7 @@ Select(F -> INTLITERAL)
 		},
 		"T'": {
 			[Token.MULT]: [Token.MULT, "F", "T'"],
-			[Token.DIV]: [Token.MINUS, "F", "T'"],
+			[Token.DIV]: [Token.DIV, "F", "T'"],
 			[Token.EOF]: [],
 			[Token.RPAREN]: [],
 			[Token.PLUS]: [],
@@ -718,6 +718,7 @@ Select(F -> INTLITERAL)
 			}
 
 			// A -> BC
+			console.log('head', head);
 			const prod = table[head.value][currToken.type];
 			if (prod == null) {
 				throw new Error('SyntaxError: unexpected token: ' + currToken.lexeme);
@@ -1089,6 +1090,7 @@ function handleKeyUp (expr) {
 		$error.innerHTML = '';
 	}
 	catch (e) {
+		console.log('e', e);
 		errorMsg = setTimeout(function () {
 			$error.innerHTML = e.toString().replace(/^Error:\s/, "");
 			d3.select('#parse-tree svg').attr('opacity', 0.5);
