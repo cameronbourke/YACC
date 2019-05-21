@@ -1,0 +1,17 @@
+:root {
+	--danger: #e74c3c;
+	--success: #ddffdf;
+	--subtle: #f8f8f8;
+	--light: #fff;
+	--light2: #c6c6c6;
+	--clr-link: #3498db;
+	--font: 'Open Sans', sans-serif;
+}
+
+a { color: var(--clr-link) }
+
+.bg-subtle { background: var(--subtle) }
+.bg-light { background: var(--light) }
+
+.light3 { color: #595959 }
+.danger { color: var(--danger) }

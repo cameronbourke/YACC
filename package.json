@@ -1,0 +1,6 @@
+{
+	"scripts": {
+		"test:Scanner": "jest compiler/Scanner/__tests__",
+		"test:Recognizer": "jest compiler/Recognizer/__tests__"
+	}
+}

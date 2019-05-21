@@ -1,0 +1,1265 @@
+<!doctype html>
+<html>
+<head>
+</head>
+
+<link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700" rel="stylesheet">
+
+<link href="./theme.css" rel="stylesheet">
+<link href="./reset.css" rel="stylesheet">
+<link href="./base.css" rel="stylesheet">
+<link href="./type.css" rel="stylesheet">
+<link href="./global.css" rel="stylesheet">
+<style>
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+
+.node text { font: 12px sans-serif; }
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
+</style>
+<style>
+	/* Tooltip container */
+	.tooltip {
+		position: relative;
+		display: inline-block;
+		border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+	}
+
+	/* Tooltip text */
+	.tooltip .tooltiptext {
+		visibility: hidden;
+		background-color: #fff;
+		border: 2px solid #6a6a6a;
+		color: #333;
+		text-align: left;
+		padding: 10px;
+		border-radius: 6px;
+
+		/* Position the tooltip text - see examples below! */
+		position: absolute;
+		z-index: 1;
+	}
+
+	/* Show the tooltip text when you mouse over the tooltip container */
+	.tooltip:hover .tooltiptext {
+		visibility: visible;
+	}
+
+	.tooltip .tooltiptext {
+		width: 240px;
+		font-weight: normal;
+		top: 120%;
+		left: 50%; 
+		margin-left: -120px; /* Use half of the width (120/2 = 60), to center the tooltip */
+	}
+
+	.tooltip .tooltiptext::after {
+		content: " ";
+		position: absolute;
+		bottom: 100%;  /* At the top of the tooltip */
+		left: 50%;
+		margin-left: -7px;
+		border-width: 7px;
+		border-style: solid;
+		border-color: transparent transparent #6a6a6a transparent;
+	}
+</style>
+
+<style>
+	.container {
+		margin: 0 auto;
+		padding-top: 70px;
+		margin-left: 70px;
+		max-width: 1000px;
+	}
+
+	.right {
+		background: #f8f8f8;
+	}
+
+	.token {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		cursor: pointer;
+		padding: 10px;
+		min-width: 40px;
+		border-radius: 5px;
+		background: var(--clr-link);
+		font-weight: 600;
+		margin-right: 10px;
+		margin-bottom: 15px;
+		color: #fff;
+	}
+
+	#input-expr {
+		outline: none;
+		transition: 0.4s ease;
+		border: 2px solid var(--light2);
+	}
+	
+	#input-expr:hover, #input-expr:focus {
+		border-color: var(--clr-link);
+	}
+
+	.fixed-nav {
+		background: #fff;
+	}
+
+	svg text {
+		font-weight: 900;
+		font-size: 20px;
+	}
+
+	.code-block {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		padding: 20px;
+		border-left: 2px solid;
+		background: var(--subtle);
+		font-size: 16px;
+	}
+
+	.grammar {
+		border: 2px solid #cecece;
+		font-size: 16px;
+	}
+
+	p {
+		line-height: 1.4;
+	}
+
+	.fw-n { 
+		font-weight: normal;
+	}
+
+
+	.tab {
+		border: 2px solid;
+		border-color: transparent;
+		border-bottom-color: #333;
+		cursor: pointer;
+		transition: background 0.5s;
+	}
+
+	.tab:hover {
+		background: var(--subtle);
+	}
+
+	.selected {
+		background: var(--subtle);
+		border: 2px solid #333 !important;
+		border-bottom-color: transparent !important;
+	}
+
+	pre {
+		display: block;
+	}
+
+	.code-block--grammar p {
+		white-space: pre;
+	}
+
+	.quoted-section {
+		margin: 60px 0 60px 60px;
+		font-size: 16px;
+	}
+
+
+</style>
+<body>
+<main>
+	<section class="container">
+		<nav class="pos-a t20 fixed-nav">
+			<a href="index.html">(0) Intro</a> <span>&gt;</span>
+			<a href="lexical-analysis.html">(1) Lexical Analysis</a> <span>&gt;</span>
+			<a href="recognizer.html" class="active">(2) Recognizer</a> <span>&gt;</span>
+			<a href="ast.html">(3) AST</a> <span>&gt;</span>
+			<a href="interpreter.html">(4) Interpreter</a>
+		</nav>
+		<div>
+			<h2>Recognizing the Unrecognizable</h2>
+			<div class="flx">
+				<p class="mt20 flx2">
+					And just like that, the parsing is done! It almost feels too easy... so you decide to ask that same coworker who helped you with the <code>Scanner</code> whether it's time to build an AST! They seem to be hiding a smirk as they ask you what does the following program mean?
+				</p>
+				<code class="code-block mt20 ml10 flx1 bg-subtle">
+					5 (( * 17 / --- (
+				</code>
+			</div>
+			<p class="mt10">
+				It's obvious right? It's, it's umm, hmm, take the <code class="d-ib p5 bg-subtle">((</code> and put down the <code class="d-ib p5 bg-subtle">*</code> and then.<br /> Okay, this actually makes no sense. "Arr", you say to yourself, "I know why their smirking, because while I can recognise all the valid tokens in the language, I <span class="fs-i">still</span> cannot recognise all the <span class="bold">valid programs</span> that can be written." You are all over it!
+			</p>
+			<p class="mt20">
+				Hello <a href="https://en.wikipedia.org/wiki/Context-free_grammar">Context Free Grammars (CFG)</a>, the older more powerful sibling to the much loved Regular Expressions. The reality is, there is about a 3% chance that CFGs could be explained in this one paragraph. So, instead below are a list of great resources that in total cover them in detail:
+				<ul class="mt5" style="list-style: lower-greek">
+					<li>
+						<a href="https://www.youtube.com/watch?v=5_tfVe7ED3g">Neso Academy [CFG Overview: 7:51m]</a>
+					</li>
+					<li>
+						<a href="https://www.youtube.com/watch?v=Rhqk9HYiB7Q">The Coding Train [Into to Session 7: 14:29m]</a>
+					</li>
+					<li>
+						<a href="https://www.youtube.com/watch?v=WccZQSERfCM&list=PLEbnTDJUr_IcPtUXFy2b1sGRPsLFMghhS&index=2">
+							Ravindrababu Ravula [Intro to Lexical Analyser & Grammars: 19:50m]
+						</a>
+					</li>
+					<li>
+						<a href="https://lagunita.stanford.edu/courses/Engineering/Compilers/Fall2014/about">
+							Stanford Online [Compiler Course Unit 3]
+						</a>
+					</li>
+					<li>
+						<a href="http://matt.might.net/articles/grammars-bnf-ebnf">
+							Matt Might Article [The language of languages]
+						</a>
+					</li>
+
+				</ul>
+ 			</p>
+			<p class="mt20">
+				Assuming you stayed up all night learning all about CFGs, your manager is now asking why you haven't started running calculations yet on the new PDP-11s that you were so excited about? You can't tell them the truth, and so you let them that you are first double checking someone else's work. That should be enough to get them off your back for now! Okay, where were we again? That's right, CFGs. Working with nothing but intution you write up your first attempt at the grammar.
+			</p>
+
+			<div class="mt20 flx">
+				<div class="grammar bg-subtle flx1 p20 mr40">
+					<code class="fs-sm">
+						<span class="bold">// Grammar 1.0</span><br>
+						<span>E -> E + E</span><br>
+						<div class="pos-r" style="left: 29px">
+							<span>| E - E</span><br>
+							<span>| E * E</span><br>
+							<span>| E / E</span><br>
+							<span>| (E)</span><br>
+							<span>| INTLITERAL</span>
+						</div>
+					</code>
+				</div>
+				<div class="flx1">
+					<p>
+						Hey, that looks good! It's small, easy to read and is straightforward enough to quickly understand what kind of programs will be generated. However, there is still a little issue hiding away in that grammar. Consider what happens when you take the <a href="https://www.youtube.com/watch?v=u4-rpIlV9NI">leftmost (LM) and rightmost (RM) derivation</a> for the program:
+					</p>
+					<code class="code-block mt20">1 + 2 + 3</code>
+				</div>
+			</div>
+
+			<div class="flx flxd-c w100 mt40">
+				<ul style="height: 50px" id="tabs-grammar-derivs" class="flx flx-ai-c flx-jc-sb">
+					<li index="0" class="flx flx1 flx-ctr h100 tab"><h5>Leftmost</h5></li>
+					<li index="1" class="flx flx1 flx-ctr h100 tab"><h5>Rightmost</h5></li>
+				</ul>
+				
+				<div id="tabs-grammar-derivs-content" class="bg-subtle">
+					<div class="flx flx1" style="border: 2px solid #333; border-top: none">
+						<div class="flx1 p20">
+							<p>We know the drill! The goal here is to keep applying productions to the <span class="bold">leftmost</span> non terminal until we reach the target string. This means that <code>INTLITERAL -> 1</code> should be the first token matched.</p>
+							<code class="mt10 d-b fs-sm code-block--grammar">
+								<p>(1) E => <span>E</span> + E</p>
+								<p>(2)   => <span><span>E</span> + E</span> + E</p>
+								<p>(3)   => INTLITERAL + E + E</p>
+								<p>(4)   => 1 + E + E</p>
+								<p>(5)   => 1 + INTLITERAL + E</p>
+								<p>(6)   => 1 + 2 + E</p>
+								<p>(7)   => 1 + 2 + INTLITERAL</p>
+								<p>(8)   => 1 + 2 + 3</p>
+							</code>
+							<p class="mt10">
+								Got it! We can evaulate the string doing a depth first [inorder] traversal of the parse tree, which gives us the expression below:
+							</p>
+							<code class="mt10 d-b fs-sm">
+								(1 + 2) + 3 = 6
+							</code>
+						</div>
+						<div class="flx flx1 flx-ctr mt20">
+							<svg id="lm-dev">
+								<g class="links"></g>
+								<g class="nodes"></g>
+							</svg>
+						</div>
+					</div>
+					<div class="flx flx1" style="border: 2px solid #333; border-top: none">
+						<div class="flx1 p20">
+							<p>If we didn't know the drill before, we do now! Similar goal, however instead we need to keep applying productions to the <span class="bold">rightmost</span> non terminal until we reach the target string. This means that <code>INTLITERAL -> 3</code> should be the first token matched.</p>
+							<code class="mt10 d-b fs-sm code-block--grammar">
+								<p>(1) E => <span>E</span> + E</p>
+								<p>(2)   => <span><span>E</span> + E</span> + E</p>
+								<p>(3)   => E + E + INTLITERAL</p>
+								<p>(4)   => E + E + 3</p>
+								<p>(5)   => E + INTLITERAL + 3</p>
+								<p>(6)   => E + 2 + 3</p>
+								<p>(7)   => INTLITERAL + 2 + 3</p>
+								<p>(8)   => 1 + 2 + 3</p>
+							</code>
+							<p class="mt10">
+								Lucky us, we managed to find it again, this time going the other way. Evaulating the parse tree this time gives us a slightly different expression below:
+							</p>
+							<code class="mt10 d-b fs-sm">
+								1 + (2 + 3) = 6
+							</code>
+						</div>
+						<div class="flx flx1 flx-ctr mt20">
+							<svg id="rm-dev">
+								<g class="links"></g>
+								<g class="nodes"></g>
+							</svg>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<p class="mt20">
+				Notice how we get different parse trees! In other words, the grammar is <a href="https://www.youtube.com/watch?v=wQjppolFdas">ambiguous</a>. That doesn't sound too good. But, wait a second minute, both parse trees when evaluated equaled <code>6</code> (thank you kindly associativity). So, look how about this, can we just promise never to use the rightmost derivation and instead always use the leftmost which gives us <code class="bg-subtle">(1 + 2) + 3</code>? Almost.
+
+			</p>
+			<div class="flx mt20">
+				<div style="flex: 1.2">
+					<p>Even if we could promise that, consider the LM derivation for the program</p>
+					<code class="code-block my10">1 + 2 * 3</code>
+					<p>If we were to evalutate this program we would see that it would be</p>
+					<code class="code-block my10">(1 + 2) * 3 = 9</code>
+					<p>
+						Hang on, that doesn't look right! We know that multiplication has a higher <a href="https://www.youtube.com/watch?v=8H9G621pQq0">precedence</a> then addition, and therefore it should <span class="bold">always</span> be evaulated as
+					</p>
+					<code class="code-block my10">1 + (2 * 3) = 7</code>
+					<p class="mt20">Turns out there is a way to enforce operator precedence by leveraging levels in the grammar. The basic idea is that multplicative expressions can only be generated by going through an additive expression first. That really doesn't make a whole bunch of sense written down. Instead, feast your eyes on the new and improved grammar 2.0 below.
+					</p>
+				</div>
+				<div class="flx flx1 flx-jc-c flx-ai-c">
+					<svg id="lm-dev-mult">
+						<g class="links"></g>
+						<g class="nodes"></g>
+					</svg>
+				</div>
+			</div>
+
+			<div class="mt20 flx">
+				<div class="grammar bg-subtle flx1 p20 mr40">
+					<code class="fs-sm">
+						<span class="bold">// Grammar 2.0</span><br>
+						<span>E -> E + T</span><br>
+						<div class="pos-r" style="left: 29px">
+							<span>| E - T</span><br>
+							<span>| T</span><br>
+						</div>
+						<span>T -> T * F</span><br>
+						<div class="pos-r" style="left: 29px">
+							<span>| T / F</span><br>
+							<span>| F</span><br>
+						</div>
+						<span>F -> (E)</span><br>
+						<div class="pos-r" style="left: 29px">
+							<span>| INTLITERAL</span>
+						</div>
+					</code>
+				</div>
+				<div class="flx1">
+					<p>
+						Now it doesn't matter which derivation you use to generate the program <code class="bg-subtle">1 + 2 * 3</code>. Not convinced? I don't blame you. See if you can create a parse tree for the expression where the <code class="bg-subtle">+</code> operator is a descendent of the <code class="bg-subtle">*</code> operator and there are no <code class="bg-subtle">()</code> in between. I'll sweeten the deal, if you can create a parse tree where that is true, email me and $100 aussie dollars are coming straight your way!
+					</p>
+				</div>
+			</div>
+
+			<p class="mt40">
+				I know what you are thinking, <span class="fs-i">"maybe I should just learn to be effective with postfix notation and abanden this whole idea of building acalculator language"</span>. Hang in there, you'll be getting your hands dirty in no time. Actually, speaking of getting our hands dirty, how are we going to actually implement the grammar? Like, it's great and all having a nice notation to work with, but we need to realise the grammar using a parsing algorithm. <a href="https://www.youtube.com/watch?v=N9UuAPU6DAg">LL(1) parsing</a> is one such algorithm. In a mouthfull, an LL(1) parser is a top down parser that reads the input <span class="bold">left</span>-to-right, using <span class="bold">leftmost</span> derivations to apply production rules, with at most <span class="bold">1</span> token of lookahead (don't worry if not a single word of that sentence made sense).
+			</p>
+			<p class="mt10">
+				Knowing little about LL(1) parsers, you decide to consult your coworker again. They advise you that using LL(1) parser is a great choice, phew! But, before you can run back to your desk they qualify their statement by saying it's a great choice <span class="fs-i">as long as</span> the grammar does not have any left recursion. Left recursion? That doesn't ring a bell. You look at your grammar, trying to find signs of something that may be left recursion. Ah ha! You think you've found the culprit.
+			</p>
+
+			<div class="mt10 flx">
+				<div class="grammar bg-subtle flx1 p20">
+					<code>
+						<span>// Grammar 2.0</span><br>
+						<span><span class="bold">E</span> -> <span class="bold">E</span> + T</span><br>
+						<span>...</span>
+					</code>
+				</div>
+			</div>
+
+			<div>
+			<p class="mt10">
+				But how does this cause a problem? Imagine applying LM derivations to the following program 
+			</p>
+			<code class="code-block mt10">1 + 2 + 3 + 4</code>
+			</div>
+
+			<div class="mt10 flx">
+				<div class="grammar bg-subtle flx1 p20">
+					<code>
+						(1) E => <span class="bold">E</span> + E<br>
+						(2) E => <span class="bold">E</span> + E + E<br>
+						(3) E => <span class="bold">E</span> + E + E + E<br>
+						(4) E => <span class="bold">INTLITERAL</span> + E + E + E<br>
+						(5) E => 1 + <span class="bold">E</span> + E + E<br>
+						(6) E => 1 + <span class="bold">INTLITERAL</span> + E<br>
+						(7) E => 1 + 2 + <span class="bold">E</span> + E<br>
+						...<br>
+						(11) E => 1 + 2 + 3 + 4<br>
+					</code>
+				</div>
+			</div>
+
+			<div class="flx quoted-section flx-d-c flx-jc-fs">
+				<h5>The burning question is, how did you know to apply this production?</h5>
+				<code class="mt10">(4) E => <span class="bold">INTLITERAL</span> + E + E + E</code>
+			</div>
+
+			<p class="mt10">
+				The answer probably goes along the line of, well I could see that the string contained three instances of the token <code class="bg-subtle">+</code> and so once I had three instances I knew to stop producing more and apply <code class="bg-subtle">E -> INTLITERAL</code> to each <code class="bg-subtle">E</code>. Without even realising, you've used a LL(k) parsing algo with k tokens of lookahead, where k is the number of tokens in the string. In other words, the parser could look at the whole string! Unfortunately, our parser doesn't have this sweet luxury but instead has to live it's life constrained to only 1 token of lookahead. It's important to note there are two well known ways to implement LL(k) parsers. The first is a <a href="https://www.youtube.com/watch?v=SH5F-rwWEog">recursive descent parser</a>, and the second is a <a hrer="https://www.youtube.com/watch?v=R1ZlWEZWMKk">table driven parser</a>.
+			</p>
+			<p class="mt10">The problem with left recursion is that for a recursive descent parser it will recurse forever, never terminating, while for a table driven parser we will end up with multiiple entries for a given cell and not know which one to apply. How do we get ourselves out of this bleek situation? <a href="https://www.youtube.com/watch?v=3_VCoBfrt9c">Left recursion elimination</a>. As if it was going to be called anything else haha. You decide in your next lunch break that you will read up on it!
+			</p>
+
+			<p class="mt10">
+				After what I can only describe as a successful lunch break, you return to your desk with a revised (and hopefully final) version of the grammar.
+			</p>
+	
+			<div class="mt40 flx">
+				<div class="grammar bg-subtle flx1 p20 mr40">
+					<code class="fs-sm">
+						<span class="bold">// Grammar 3.0</span><br>
+						<span style="white-space: pre">E  -> TE'</span><br>
+						<span>E' -> +TE' | -TE' | &lt;eps&gt; // &lt;eps&gt; is eplison</span><br>
+						<span style="white-space: pre">T  -> FT'</span><br>
+						<span>T' -> *FT' | /FT' | &lt;eps&gt;</span><br>
+						<span style="white-space: pre">F  -> (E)  | INTLITERAL</span><br>
+					</code>
+				</div>
+				<div class="flx1">
+					<p>
+					Your coworker notices the revised grammar as they walk past. Interested, they take a closer look. Before you can turn around, you hear them announce "That's the one!". They continue, "You've nailed it! The grammar has the correct operator precedence, each operator has the correct associativity, each production is free of left recursion and there are no common prefixes. All you have to do now is to compute the first, follow and select sets of the grammar." You sink at the sound of more unfamilar words <code>first, follow and select sets</code>. When will this end?
+					</p>
+				</div>
+			</div>
+
+			<p class="mt40">
+				Turns out there is a special type of top down parsers that we want to use to maximise the effeciency of the parsing algorithm. Remember, we need to run this on a PDP-11! It is called a predictaive top down parser, which just means that it doesn't require backtracking. The key thing to realise is that without a predictive parser, we essentially need to try all productions, and then choose the one that gives us the longest match (if any). If we can compute the <code>first</code>, <code>follow</code> and <code>select</code> sets for the grammar then we will have everything needed to implement the parser! Ravindrababu Ravula does a fantastic job walking us through that process over <a href="https://www.youtube.com/watch?v=_uSlP91jmTM">here on their youtube channel</a>.
+			</p>
+
+			<p class="mt20">
+				After being enlightened on how to compute the sets, you sit down and decide to have a crack at the final edition of the grammar. You can feel the implementation of the parser only minutes away. I should add, <code>select</code> sets are simply a convenience set thats wraps around <code>first</code> and <code>follow</code> sets to make building the parsing table or recursive decent parser more straightforward. You'll see the definition in the stub file for the Parser! One long coffee later, and there they are below in all their glory!
+			</p>
+
+
+			<div class="flx flxd-c mt40">
+				<ul style="height: 50px" id="tabs-ffs" class="flx flx-ai-c flx-jc-sb">
+					<li index="0" class="flx flx1 flx-ctr h100 tab"><h5>First</h5></li>
+					<li index="1" class="flx flx1 flx-ctr h100 tab"><h5>Follow</h5></li>
+					<li index="2" class="flx flx1 flx-ctr h100 tab"><h5>Select</h5></li>
+				</ul>
+				<div id="tabs-ffs-content" class="bg-subtle">
+					<code style="border: 2px solid #333; border-top: none" class="d-b p20 fs-sm">
+						<span class="bold">// Non terminals</span>
+						<pre>
+First(eps) = { eps }
+First(+)   = { + }
+First(-)   = { - }
+First(/)   = { / }
+First(*)   = { * }
+First("(") = { ( }
+First(")") = { ) }
+First(INTLITERAL) = { INTLITERAL }
+						</pre>
+
+						<span class="bold">// Terminals</span>
+						<pre>
+First(E)  = First(T)
+          = { (, INTLITERAL }
+
+First(E') = First(+) U First(-) U First(eps)
+          = { +, -, eps }
+
+First(T)  = First(F)
+          = { (, INTLITERAL }
+
+First(T') = First(*) U First(/) U First(eps)
+          = { *, /, eps }
+
+First(F)  = First("(") U First(INTLITERAL)
+          = { (, INTLITERAL }
+						</pre>
+					</code>
+					<code style="border: 2px solid #333; border-top: none" class="d-b p20 fs-sm">
+						<span class="bold">// Terminals Only</span>
+						<pre>
+Follow(E)  = { $ } U First(")")
+		
+Follow(E') = Follow(E)
+           = { $, ) }
+
+Follow(T)  = First(E') U Follow(E') U Follow(E)
+           = First(E') U Follow(E') // by Follow(E') = Follow(E)
+           = { +, -, eps, $, ) }
+		
+Follow(T') = Follow(T)
+           = { +, -, eps, $, ) }
+			
+Follow(F)  = First(T') U Follow(T') U Follow(T)
+           = First(T') U Follow(T') // by Follow(T') = Follow(T)
+           = { *, /, eps, +, -, $, ) }
+						</pre>
+					</code>
+					<code style="border: 2px solid #333; border-top: none" class="d-b p20 fs-sm">
+						<span class="bold">// Terminals Only</span>
+						<pre>
+Select(E -> TE')   = First(TE') = First(T)
+                   = { (, INTLITERAL }
+
+Select(E' -> +TE') = First(+TE') = First(+)
+                   = { + }
+Select(E' -> -TE') = First(-TE) = First(-)
+                   = { - }
+Select(E' -> eps)  = First(eps) - {eps} U Follow(E')
+                   = { $, ) } 
+
+Select(T -> FT')   = First(FT') = First(F)
+                   = { (, INTLITERAL }
+
+Select(T' -> *FT') = First(*FT') = First(*)
+                   = { * }
+Select(T' -> /FT') = First(/FT') = First(/)
+                   = { / }
+Select(T' -> eps)  = First(eps) - {eps} U Follow(T')
+                   = { +, -, $, ) }
+
+Select(F -> (E))   = First((E)) = First("(")
+                   = { ( }
+Select(F -> INTLITERAL)
+                   = First(INTLITERAL)
+                   = { INTLITERAL }
+						</pre>
+					</code>
+				</div>
+			</div>
+
+			<p class="mt40">
+				To complete this stage, you need to implement a [predictive] recursive descent LL(1) parser. A template scanner has been defined in <code>compiler/Parser/Parser.js</code>. To test your implementation as you go along, run:
+				<code class="code-block d-b p10 my10 bg-subtle">
+					$ yarn run test:Recognizer
+				</code>
+				Don't forget to checkout the handy tool a little further down to help visualise what the parse tree looks like for a given program. When a production is applied, for example <code class="bg-subtle">E => TE'</code> that corresponds to a node called <code>E</code> that has two children <code>T</code> and <code>E'</code> (as is the case with the root node below). An interesting side note, if you change the stream of characters to be just the program <code class="bg-subtle">1</code>, it requires 9 nodes in total in the tree!
+			</p>
+
+			<aside class="my40 br10 next-step w50">
+				<h5>Next Step</h5>
+				<p class="mt5">
+				That was a mountain of information to parse through (ha ha pardon the pun). Hats off if you took the time to grok CFGs! The leap from here to ASTs is far far shorter, I promise. Now that we have the tokens for the language, and are able to recognise valid programs in the language, we need to move from our literal representation of programs (parse trees), to something, shall we say, a little more abstract. Yep! It's finally time to <a href="ast.html">(3) AST</a>
+			</aside>
+		</div>
+	</section>
+
+	<section class="flx flx-d-c flx1 wh100v bg-subtle">
+		<div class="container w100 mb10 flx">
+			<div class="flx1 mr80">
+				<label for="input-expr">
+					<h5>Stream of Characters:</h5>
+				</label>
+				<input id="input-expr" class="w100 mt10 p20 fs-sm" type="text" value="1 + 2 + 3" placeholder="Enter expression">	
+			</div>
+			<div class="flx1">
+				<h5 class="mb10 d-ib">Stream of Tokens:</h5>
+				<span class="fs-i light3 italic">(hover to view JS Object)</span>
+				<div id="token-list"></div>
+			</div>
+		</div>
+
+		<div class="pos-r" style="margin-left: 70px">
+			<h5 class="mt40 d-ib">Parse Tree:</h5>
+			<p id="parser-error-msg" class="pos-a mt10 danger bold"></p>
+		</div>
+
+		<div class="flx flx-jc-c flx1" id="parse-tree">
+			<svg>
+				<g class="links"></g>
+				<g class="nodes"></g>
+			</svg>
+		</div>
+	</section>
+</main>
+	
+<script src="./node-modules-stub.js"></script>
+<script src="../compiler/Scanner/Token.js"></script>
+<script src="../compiler/Scanner/sol/Scanner.js"></script>
+<script>
+	/*
+
+	Grammar v1
+	-----------------------------------------------
+	E -> E + E
+	   | E - E
+	   | E * E
+	   | E / E
+	   | (E)
+	   | INTLITERAL
+
+	Grammar v2
+	-----------------------------------------------
+	E -> E + T | T
+	   | E - T | T
+	T -> T * F | F
+	   | T / F | F
+	F -> (E)
+	   | INTLITERAL
+
+	Grammar v3
+	-----------------------------------------------
+	E -> TE'
+	E'-> +TE' | -TE' | <eps>
+	T -> FT'
+	T'-> *FT' | /FT' | <eps>
+	F -> (E)
+	   | INTLITERAL
+	*/
+
+	const LLParsingTable = {
+		"E": {
+			[Token.LPAREN]: ["T", "E'"],
+			[Token.INTLITERAL]: ["T", "E'"]
+		},
+		"E'": {
+			[Token.PLUS]: [Token.PLUS, "T", "E'"],
+			[Token.MINUS]: [Token.MINUS, "T", "E'"],
+			[Token.EOF]: [],
+			[Token.RPAREN]: [],
+		},
+		"T": {
+			[Token.LPAREN]: ["F", "T'"],
+			[Token.INTLITERAL]: ["F", "T'"]
+		},
+		"T'": {
+			[Token.MULT]: [Token.MULT, "F", "T'"],
+			[Token.DIV]: [Token.MINUS, "F", "T'"],
+			[Token.EOF]: [],
+			[Token.RPAREN]: [],
+			[Token.PLUS]: [],
+			[Token.MINUS]: [],
+		},
+		"F": {
+			[Token.LPAREN]: [Token.LPAREN, "E", Token.RPAREN],
+			[Token.INTLITERAL]: [Token.INTLITERAL],
+		}
+	}
+
+
+	class ParseTreeNode {
+		constructor (value, key) {
+			this.value = value;
+			this.children = [];
+			this.key = key;
+		}
+	}
+
+	console.log(Token);
+
+	function hash (...args) {
+		const str = args.join(":");
+		var hash = 0;
+		for (var i = 0; i < str.length; i++) {
+			var char = str.charCodeAt(i);
+			hash = ((hash<<5)-hash)+char;
+			hash = hash & hash; // Convert to 32bit integer
+		}
+		return hash;
+	}
+
+	function LLParsingDriver (tokens, table, startSymbol) {
+		const EPS = '\u03B5';
+		const stack = [
+			new ParseTreeNode(startSymbol, hash(startSymbol, "")),
+			new ParseTreeNode(Token.EOF, hash(Token.EOF, ""))
+		];
+
+		const tree = stack[0];
+		console.log('initial stack', stack);
+		let index = 0;
+		let currToken = tokens[0];
+
+		const equals = (nt) =>
+			nt.value === currToken.type;
+
+		const accept = () => {
+			index++;
+			currToken = tokens[index];
+		}			
+
+		while (index < tokens.length) {
+			const head = stack.shift();
+
+			/*
+			console.table({
+				head,
+				currToken: currToken.type,
+				stack,
+			});
+			*/
+
+			// is Leaf node
+			if (equals(head)) {
+				if (currToken.type === Token.INTLITERAL)
+					// emulate INTLITERAL production
+					head.children = [
+						new ParseTreeNode(currToken.lexeme, hash(head.key, currToken.lexeme))
+					];
+				else
+					head.value = currToken.lexeme;
+				accept();
+				continue;
+			}
+
+			// A -> BC
+			const prod = table[head.value][currToken.type];
+			if (prod == null) {
+				throw new Error('SyntaxError: unexpected token: ' + currToken.lexeme);
+			}
+			
+			if (prod.length <= 0) {
+				const children =
+					[new ParseTreeNode(EPS, hash(head.key, currToken.lexeme))];
+				head.children = children;
+				continue;
+			}
+
+			const children = prod.map(nt => {
+				return new ParseTreeNode(nt, hash(head.key, nt));
+			});
+
+			head.children = children;
+			stack.unshift(...children);
+		}
+
+		if (stack.length > 0) {
+			throw new Error('SyntaxError: unexpected end of input');
+		}
+
+		return tree;
+	}
+
+	/*
+	const parseTree =
+		LLParsingDriver([...Scanner("1")], LLParsingTable, "E");
+
+	console.log('parseTree', parseTree);
+	*/
+</script>
+
+<!-- load the d3.js library -->	
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://d3js.org/d3-hierarchy.v1.min.js"></script>
+	
+<script>
+
+	const $error =
+		document.getElementById('parser-error-msg');
+
+	let errorMsg = null;
+
+	const link = d3.linkVertical()
+		.x(function(d) { return d.x; })
+		.y(function(d) { return d.y; });
+
+	const rootNode1 = d3.hierarchy({
+		value: 'E',
+		children: [
+			{
+				value: 'E',
+				children: [
+					{
+						value: 'E',
+						children: [
+							{
+								value: Token.INTLITERAL,
+								children: [
+									{
+										value: '1',
+										children: [],
+									}
+								]
+							}
+						]
+					},
+					{
+						value: '+',
+						children: []
+					},
+					{
+						value: 'E',
+						children: [
+							{
+								value: Token.INTLITERAL,
+								children: [
+									{
+										value: '2',
+										children: []
+									}
+								]
+							}
+						]
+					}
+				]			
+			},
+			{
+				value: '+',
+				children: []
+			},
+			{
+				value: 'E',
+				children: [
+					{
+						value: Token.INTLITERAL,
+						children: [
+							{
+								value: '3',
+								children: []
+							}
+						]
+					}
+				]
+			}
+		],
+	});
+
+	const rootNode2 = d3.hierarchy({
+		value: 'E',
+		children: [
+			{
+				value: 'E',
+				children: [
+					{
+						value: Token.INTLITERAL,
+						children: [
+							{
+								value: '3',
+								children: []
+							}
+						]
+					}
+				]
+			},
+			{
+				value: '+',
+				children: []
+			},
+			{
+				value: 'E',
+				children: [
+					{
+						value: 'E',
+						children: [
+							{
+								value: Token.INTLITERAL,
+								children: [
+									{
+										value: '1',
+										children: [],
+									}
+								]
+							}
+						]
+					},
+					{
+						value: '+',
+						children: []
+					},
+					{
+						value: 'E',
+						children: [
+							{
+								value: Token.INTLITERAL,
+								children: [
+									{
+										value: '2',
+										children: []
+									}
+								]
+							}
+						]
+					}
+				]			
+			},
+		],
+	});
+
+	const rootNode3 = d3.hierarchy({
+		value: 'E',
+		children: [
+			{
+				value: 'E',
+				children: [
+					{
+						value: 'E',
+						children: [
+							{
+								value: Token.INTLITERAL,
+								children: [
+									{
+										value: '1',
+										children: [],
+									}
+								]
+							}
+						]
+					},
+					{
+						value: '+',
+						children: []
+					},
+					{
+						value: 'E',
+						children: [
+							{
+								value: Token.INTLITERAL,
+								children: [
+									{
+										value: '2',
+										children: []
+									}
+								]
+							}
+						]
+					}
+				]			
+			},
+			{
+				value: '*',
+				children: []
+			},
+			{
+				value: 'E',
+				children: [
+					{
+						value: Token.INTLITERAL,
+						children: [
+							{
+								value: '3',
+								children: []
+							}
+						]
+					}
+				]
+			}
+		],
+	});
+
+
+	const tree1 = d3.tree()
+		.size([350 - 40, 350 - 80]);
+
+	const tree2 = d3.tree()
+		.size([350 - 40, 350 - 80]);
+
+	const tree3 = d3.tree()
+		.size([350 - 40, 350 - 80]);
+
+	tree1(rootNode1);
+	tree2(rootNode2);
+	tree3(rootNode3);
+
+	console.log(d3.select("#lm-dev"));
+	const svg1 = d3
+		.select('#lm-dev')
+		.attr('width', 350)
+		.attr('height', 350);
+
+	const svg2 = d3
+		.select('#rm-dev')
+		.attr('width', 350)
+		.attr('height', 350);
+
+	const svg3 = d3
+		.select('#lm-dev-mult')
+		.attr('width', 350)
+		.attr('height', 350);
+
+	updateLinks(svg1, rootNode1.links());
+	updateNodes(svg1, rootNode1.descendants());
+	
+	updateLinks(svg2, rootNode2.links());
+	updateNodes(svg2, rootNode2.descendants());
+
+	updateLinks(svg3, rootNode3.links());
+	updateNodes(svg3, rootNode3.descendants());
+
+
+	const $input = document.getElementById('input-expr');
+	let prevExpr = null;
+	handleKeyUp($input.value.trim());
+
+	$input.addEventListener('keyup',
+		function (e) {
+			handleKeyUp(e.target.value.trim());
+		});
+
+function updateLinks (svg, data) {
+	console.log('links: data', data);
+	const links = svg
+		.select('g.links')
+		.selectAll('path')
+		.data(data, d => d.source.data.key + ':' + d.target.data.key);
+
+	links
+		.exit()
+		.remove()
+		.transition()
+		.duration(1000)
+		.attr('opacity', 0);
+
+	const enter = links
+		.enter()
+		.append('path')
+		.attr('fill', 'none')
+		.attr('stroke', '#ADADAD')
+		.attr('opacity', 0)
+		.transition()
+		.duration(1000)
+		.attr('opacity', 1)
+
+	links
+		.merge(enter)
+		.attr('d', link);
+}
+
+function updateNodes (svg, data) {
+	console.log('updateNodes nodes: data', data);
+	const nodes = svg
+		.select('g.nodes')
+		.selectAll('g')
+		.data(data, d => d.data.key) 
+
+	const enter = nodes
+		.enter()
+		.append('g')
+
+	const EPS = '\u03B5';
+	enter
+		.append('rect')
+		.attr('fill', d => d.data.value === EPS ? 'var(--subtle)' : !d.children ? 'var(--clr-link)' : '#59ade3')
+		.attr('stroke', d  => d.data.value === EPS ? 'var(--clr-link)' : 'none')
+		.attr('width', 40)
+		.attr('height', 40)
+		.attr('rx', d => d.children ? 20 : 7)
+		.attr('ry', d => d.children ? 20 : 7)
+
+	enter
+		.attr('style', 'transform-origin: 20px 20px')
+		.attr('transform', d => `translate(${d.x - 20}, ${d.y}) scale(0)`)
+		.transition()
+		.duration(1000)
+		.attr('transform', d => `translate(${d.x - 20}, ${d.y}) scale(1)`)
+
+	enter
+		.append('text')
+		.attr('fill', d => d.data.value === EPS ? 'var(--clr-link)' : 'var(--light)')
+		.attr('dominant-baseline', 'middle')
+		.attr('text-anchor', 'middle')
+		.attr('x', 21)
+		.attr('y', 21)
+		.text(({ data }) => {
+			if (data.value === Token.INTLITERAL) return "IL";
+			return data.value;
+		});
+
+	nodes
+		.exit()
+		.remove();
+
+	nodes
+		.attr('transform', d => `translate(${d.x - 20}, ${d.y})`)
+}
+
+
+function handleKeyUp (expr) {
+
+	let parseTree = null;
+	clearTimeout(errorMsg);
+
+	try {
+		parseTree = LLParsingDriver([...Scanner(expr)], LLParsingTable, "E");
+		console.log('parseTree', parseTree);
+		$error.innerHTML = '';
+	}
+	catch (e) {
+		errorMsg = setTimeout(function () {
+			$error.innerHTML = e.toString().replace(/^Error:\s/, "");
+			d3.select('#parse-tree svg').attr('opacity', 0.5);
+			prevExpr = null;
+		}, 1500);
+		return;
+	}
+
+	console.log('parseTree', parseTree);
+	prevExpr = expr;
+	
+	/*
+	const parseTree =
+		JSON.parse( 
+	`{"name":"E","children":[{"name":"T","children":[{"name":"F","children":[{"name":"INTLITERAL","children":[]}]},{"name":"T'","children":[]}]},{"name":"E'","children":[{"name":"PLUS","children":[]},{"name":"T","children":[{"name":"F","children":[{"name":"INTLITERAL","children":[]}]},{"name":"T'","children":[]}]},{"name":"E'","children":[{"name":"PLUS","children":[]},{"name":"T","children":[{"name":"F","children":[{"name":"INTLITERAL","children":[]}]},{"name":"T'","children":[]}]},{"name":"E'","children":[]}]}]}]}`
+	);
+	*/
+
+	// ************** Generate the tree diagram	 *****************
+	const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+	const container = document.querySelector('#parse-tree');
+	const width = Math.min(container.clientWidth, 1000);
+	const height = Math.min(container.clientHeight, 1000);
+	const size = Math.min(width, height);
+
+	console.log('width', width);
+	console.log('height', height);
+
+	console.log('width', width);
+	console.log('height', height);
+
+	const rootNode = d3.hierarchy(parseTree);
+
+	const tree = d3.tree()
+		.size([
+			width - 40 - margin.left - margin.right,
+			height - 40 - margin.top - margin.left
+		])
+
+	tree(rootNode);
+
+	const svg = d3.select('#parse-tree svg')
+		.attr('width', width)
+		.attr('height', height)
+		.attr('opacity', 1)
+
+	console.log('rootNode.descendants', rootNode.descendants());
+
+	updateLinks(svg, rootNode.links());
+	updateNodes(svg, rootNode.descendants());
+}
+</script>
+<script>
+	function TokenItem (token) {
+		const li = document.createElement('li');
+		li.classList.add('tooltip', 'token');
+		li.innerHTML = `
+			<span>${token.lexeme}</span>
+			<div class="tooltiptext">
+				<div class="flx flxd-c">
+					<code>Token {</code>
+					<code class="d-ib ml20">type: ${token.type},</code>
+					<code class="d-ib ml20">lexeme: "${token.lexeme}"</code>
+					<code>}</code>
+				</div>
+			</div>
+		`;
+		return li;
+	}
+
+	class TokenList {
+
+		constructor ($root, $input) {
+			this.$root = $root;	
+			this.$input = $input;	
+
+			this.$input.addEventListener('keyup', this.handleInputChange);
+			this.render(Scanner($input.value));
+		}
+
+		handleInputChange = ({ target }) => {
+			this.render(Scanner(target.value));
+		}
+
+		render (tokens) {
+			const $list = document.createElement('ul');
+			$list.classList.add('tokens', 'flx', 'flx-w', 'flxd-r', 'fs-sm');
+
+			try {
+				for (let token of tokens) {
+					console.log('token', token);
+					$list.appendChild(TokenItem(token));
+				}
+			}
+			catch (e) {
+				console.log(e);
+				this.$root.removeChild(this.$root.firstChild);
+				const $msg = document.createElement('p');
+				$msg.classList.add('danger', 'bold');
+				$msg.append(e.toString().replace(/^Error:\s/, ""));
+				this.$root.appendChild($msg);
+				return;
+			}
+
+			if (this.$root.firstChild)
+				this.$root.replaceChild($list, this.$root.firstChild);
+			else
+				this.$root.appendChild($list);
+		}
+
+	}
+
+	function $ (...args) {
+		return document.querySelector(...args);
+	}
+
+	const tokenList = new TokenList($('#token-list'), $('#input-expr'));
+</script>
+
+<script>
+(function () {
+	class Tabs {
+		constructor ({ $tabs, $content, initialTab = 0 }) {
+			console.log('$tabs', $tabs);
+			console.log('$content', $content);
+			this.$tabs = $tabs;
+			this.$content = $content;
+		
+			this.setSelected(initialTab);
+			$tabs.forEach(t => t.addEventListener('click', this.handleTabClick));
+		}
+
+		setSelected (index) {
+			this.selectedIndex = index;
+			console.log('index', index);
+			this.$content.forEach((c, i) => {
+				if (i === index)
+					c.style.display = c.classList.value.includes("flx") ? 'flex' : 'block';
+				else
+					c.style.display = 'none';
+			console.log('c', c.style.display);
+			});
+			this.$tabs.forEach((t, i) => {
+				if (i === index)
+					t.classList.add('selected')
+				else
+					t.classList.remove('selected')
+			});
+		}
+
+		handleTabClick = ({ target }) => {
+			const index = target.closest('li').attributes.index;
+			this.setSelected(parseInt(index.value));
+		}
+	}
+
+	function $ (...args) {
+		return document.querySelectorAll(...args);
+	}
+
+	new Tabs({
+		$tabs: $('#tabs-ffs > li'),
+		$content: $('#tabs-ffs-content > code'),
+	});
+
+	new Tabs({
+		$tabs: $('#tabs-grammar-derivs > li'),
+		$content: $('#tabs-grammar-derivs-content > div'),
+	});
+})();
+	
+</script>
+</body>
+</html>

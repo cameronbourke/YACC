@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+<head>
+</head>
+
+<link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,700" rel="stylesheet">
+
+<link href="./theme.css" rel="stylesheet">
+<link href="./reset.css" rel="stylesheet">
+<link href="./base.css" rel="stylesheet">
+<link href="./type.css" rel="stylesheet">
+<link href="./global.css" rel="stylesheet">
+
+<style>
+	/* Tooltip container */
+	.tooltip {
+		position: relative;
+		display: inline-block;
+		border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+	}
+
+	/* Tooltip text */
+	.tooltip .tooltiptext {
+		visibility: hidden;
+		background-color: #fff;
+		border: 2px solid #6a6a6a;
+		color: #333;
+		text-align: left;
+		padding: 10px;
+		border-radius: 6px;
+
+		/* Position the tooltip text - see examples below! */
+		position: absolute;
+		z-index: 1;
+	}
+
+	/* Show the tooltip text when you mouse over the tooltip container */
+	.tooltip:hover .tooltiptext {
+		visibility: visible;
+	}
+
+	.tooltip .tooltiptext {
+		width: 240px;
+		font-weight: normal;
+		top: 120%;
+		left: 50%; 
+		margin-left: -120px; /* Use half of the width (120/2 = 60), to center the tooltip */
+	}
+
+	.tooltip .tooltiptext::after {
+		content: " ";
+		position: absolute;
+		bottom: 100%;  /* At the top of the tooltip */
+		left: 50%;
+		margin-left: -7px;
+		border-width: 7px;
+		border-style: solid;
+		border-color: transparent transparent #6a6a6a transparent;
+	}
+</style>
+
+<style>
+	.left {
+		flex: 1.2;
+	}
+
+	.left, .right {
+		padding: 70px;
+	}
+
+	.right {
+		background: #f8f8f8;
+	}
+
+	.token {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		cursor: pointer;
+		padding: 10px;
+		min-width: 40px;
+		border-radius: 5px;
+		background: var(--clr-link);
+		font-weight: 600;
+		margin-right: 10px;
+		margin-bottom: 15px;
+		color: #fff;
+	}
+
+	#input-expr {
+		outline: none;
+		transition: 0.4s ease;
+		border: 2px solid var(--light2);
+	}
+	
+	#input-expr:hover, #input-expr:focus {
+		border-color: var(--clr-link);
+	}
+
+</style>
+<body class="wh100v">
+<main class="flx wh100"> 
+	<nav class="pos-a t20" style="left: 70px">
+		<a href="index.html">(0) Intro</a> <span>&gt;</span>
+		<a href="lexial-analysis.html" class="active">(1) Lexical Analysis</a> <span>&gt;</span>
+		<a href="recognizer.html">(2) Recognizer</a> <span>&gt;</span>
+		<a href="ast.html">(3) AST</a> <span>&gt;</span>
+		<a href="interpreter.html">(3) Interpreter</a>
+	</nav>
+	<section class="left">
+		<div>
+			<h2>It's Raining Tokens</h2>
+			<p class="mt20">
+				It's raining what? Tokens. Lexical analysis is a fancy way of talking about the process of converting a sequence of characters into a sequence of tokens. Now, lucky for us, most of our tokens can be mapped directly to their single character equivalent. These include:
+ 			</p>
+			<code class="code-block d-ib p5 mt5 bg-subtle">
+				), (, /, *, +, -
+			</code>
+			<p class="mt20">
+				If it's that straight forward, why not just skip this step? Valid point, to show you why it is necessary, imagine if we saw the following sequence of characters:<code class="code-block d-b p5 my10 bg-subtle">&gt; 1 0 3 7</code>Is that four separete digits <code class="d-ib p5 bg-subtle">1</code> <code class="d-ib p5 bg-subtle">0</code> <code class="d-ib p5 bg-subtle">3</code> <code class="d-ib p5 bg-subtle">7</code>? Or, is it <code class="d-ib p5 bg-subtle">10</code> and <code class="d-ib p5 bg-subtle">37</code>? Or is it <code class="d-ib p5 bg-subtle">1037</code>?<br> <span class="bold">Remember</span>, we can only see one character at a time. Turns out this is exactly what the lexical anaylsis stage tries to solve.
+
+			<p class="mt20">
+				To complete this stage, you need to implement a Scanner. A template scanner has been defined in <code>compiler/Scanner/Scanner.js</code>. To test your implementation as you go along, run:
+				<code class="code-block d-b p10 my10 bg-subtle">
+					$ yarn run test:Scanner
+				</code>
+				When it is all green (that is the tests are passing), you should be able to enter any expression within the textbox on the right, and see each corresponding token below.
+
+			</p>
+			<aside class="mt40 mb10 br10 next-step">
+				<h5>Next Step</h5>
+				<p class="mt5 p-sm">
+				Well done! The <code>Parser</code> is going to be very happy to hear it can now work with tokens. Speaking of which, let's move onto the next stage, <a href="parsing.html">(2) Parsing</a>.
+			</aside>
+		</div>
+	</section>
+	<section class="flx flx-d-c flx1 right">
+		<div class="w100">
+			<label for="input-expr">
+				<h5>Stream of Characters:</h5>
+			</label>
+			<input id="input-expr" class="w100 mt10 p20 fs-sm" type="text" placeholder="Enter expression">	
+		</div>
+
+		<div class="mt40">
+			<h5 class="mb10 d-ib">Stream of Tokens:</h5>
+			<span class="fs-i light3 italic">(hover to view JS Object)</span>
+			<div id="token-list"></div>
+		</div>
+	</section>
+</main>
+	
+<script src="./node-modules-stub.js"></script>
+<script src="../compiler/Scanner/Token.js"></script>
+<script src="../compiler/Scanner/sol/Scanner.js"></script>
+<script>
+	function TokenItem (token) {
+		const li = document.createElement('li');
+		li.classList.add('tooltip', 'token');
+		li.innerHTML = `
+			<span>${token.lexeme}</span>
+			<div class="tooltiptext">
+				<div class="flx flxd-c">
+					<code>Token {</code>
+					<code class="d-ib ml20">type: ${token.type},</code>
+					<code class="d-ib ml20">lexeme: "${token.lexeme}"</code>
+					<code>}</code>
+				</div>
+			</div>
+		`;
+		return li;
+	}
+
+	class TokenList {
+
+		constructor ($root, $input) {
+			this.$root = $root;	
+			this.$input = $input;	
+
+			this.$input.addEventListener('keyup', this.handleInputChange);
+			this.render([]);
+		}
+
+		handleInputChange = ({ target }) => {
+			this.render(Scanner(target.value));
+		}
+
+		render (tokens) {
+			const $list = document.createElement('ul');
+			$list.classList.add('tokens', 'flx', 'flx-w', 'flxd-r', 'fs-sm');
+
+			try {
+				for (let token of tokens) {
+					console.log('token', token);
+					$list.appendChild(TokenItem(token));
+				}
+			}
+			catch (e) {
+				console.log(e);
+				this.$root.removeChild(this.$root.firstChild);
+				const $msg = document.createElement('p');
+				$msg.classList.add('danger', 'bold');
+				$msg.append(e.toString().replace(/^Error:\s/, ""));
+				this.$root.appendChild($msg);
+				return;
+			}
+
+			if (this.$root.firstChild)
+				this.$root.replaceChild($list, this.$root.firstChild);
+			else
+				this.$root.appendChild($list);
+		}
+
+	}
+
+	function $ (...args) {
+		return document.querySelector(...args);
+	}
+
+	const tokenList = new TokenList($('#token-list'), $('#input-expr'));
+</script>
+</body>
+</html>

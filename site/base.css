@@ -1,0 +1,154 @@
+/* flex 
+ * =================================== */
+.flx { display: flex }
+.flx1, .flx-1 { flex: 1 }
+.flx2, .flx-2 { flex: 2 }
+.flx3, .flx-3 { flex: 3 }
+.flx4, .flx-4 { flex: 4 }
+.flx-ctr { justify-content: center; align-items: center }
+.flx-jc-c, .flxjc-c { justify-content: center }
+.flx-jc-sb { justify-content: space-between }
+.flx-jc-fs { justify-content: flex-start }
+.flx-jc-fe { justify-content: flex-end }
+.flx-ai-fs { align-items: flex-start }
+.flx-ai-c { align-items: center }
+.flx-ai-fe { align-items: flex-end }
+.flx-ai-c, .flxai-c { align-items: center }
+.flx-d-c, .flxd-c { flex-direction: column }
+.flx-d-cr, .flxd-cr { flex-direction: column-reverse }
+.flx-d-r, .flxd-r { flex-direction: row }
+.flx-d-rr, .flxd-rr { flex-direction: row-reverse }
+.flx-w, .flx-w-w { flex-wrap: wrap }
+
+/* margin
+ * =================================== */
+.m0 { margin: 0 }
+.m5 { margin: 5px }
+.m10 { margin: 10px }
+.m20 { margin: 20px }
+
+.mt0 { margin-top: 0 }
+.mt5 { margin-top: 5px }
+.mt10 { margin-top: 10px }
+.mt20 { margin-top: 20px }
+.mt40 { margin-top: 40px }
+
+.mr0 { margin-right: 0 }
+.mr5 { margin-right: 5px }
+.mr10 { margin-right: 10px }
+.mr20 { margin-right: 20px }
+.mr40 { margin-right: 40px }
+.mr80 { margin-right: 80px }
+
+.mb0 { margin-bottom: 0px }
+.mb5 { margin-bottom: 5px }
+.mb10 { margin-bottom: 10px }
+.mb20 { margin-bottom: 20px }
+
+.ml0 { margin-left: 0 }
+.ml5 { margin-left: 5px }
+.ml10 { margin-left: 10px }
+.ml20 { margin-left: 20px }
+
+.mx0 { margin-left: 0; margin-right: 0 }
+.mx5 { margin-left: 5px; margin-right: 5px }
+.mx10 { margin-left: 10px; margin-right: 10px }
+.mx20 { margin-left: 20px; margin-right: 20px }
+
+.my0 { margin-top: 0; margin-bottom: 0 }
+.my5 { margin-top: 5px; margin-bottom: 5px }
+.my10 { margin-top: 10px; margin-bottom: 10px }
+.my20 { margin-top: 20px; margin-bottom: 20px }
+.my40 { margin-top: 40px; margin-bottom: 40px }
+
+/* padding
+ * =================================== */
+.p0 { padding: 0 }
+.p5 { padding: 5px }
+.p10 { padding: 10px }
+.p20 { padding: 20px }
+
+.pt0 { padding-top: 0 }
+.pt5 { padding-top: 5px }
+.pt10 { padding-top: 10px }
+.pt20 { padding-top: 20px }
+
+.pr0 { padding-right: 0 }
+.pr5 { padding-right: 5px }
+.pr10 { padding-right: 10px }
+.pr20 { padding-right: 20px }
+
+.pb0 { padding-bottom: 0 }
+.pb5 { padding-bottom: 5px }
+.pb10 { padding-bottom: 10px }
+.pb20 { padding-bottom: 20px }
+
+.pl0 { padding-left: 0 }
+.pl5 { padding-left: 5px }
+.pl10 { padding-left: 10px }
+.pl20 { padding-left: 20px }
+
+.px0 { padding-left: 0; padding-right: 0 }
+.px5 { padding-left: 5px; padding-right: 5px }
+.px10 { padding-left: 10px; padding-right: 10px }
+.px20 { padding-left: 20px; padding-right: 20px }
+
+.py0 { padding-top: 0; padding-bottom: 0 }
+.py5 { padding-top: 5px; padding-bottom: 5px }
+.py10 { padding-top: 10px; padding-bottom: 10px }
+.py20 { padding-top: 20px; padding-bottom: 20px }
+
+/* width, height
+ * =================================== */
+.w50 { width: 50% }
+.h50 { height: 50% }
+.wh50 { width: 50%; height: 50% }
+.w100 { width: 100% }
+.h100 { height: 100% }
+.wh100 { width: 100%; height: 100% }
+.wh100v { width: 100vw; height: 100vh };
+
+/* border
+ * =================================== */
+.br0 { border-radius: 0 }
+.br5 { border-radius: 5px }
+.br10 { border-radius: 10px }
+.br20 { border-radius: 20px }
+
+/* display
+ * =================================== */
+.d-b { display: block }
+.d-ib { display: inline-block }
+.d-f { display: flex }
+
+/* position
+ * =================================== */
+.pos-a { position: absolute }
+.pos-r { position: relative }
+
+.pos-r.t0, .pos-a.t0 { top: 0 }
+.pos-r.r0, .pos-a.r0 { right: 0 }
+.pos-r.b0, .pos-a.b0 { bottom: 0 }
+.pos-r.l0, .pos-a.l0 { left: 0 }
+
+.pos-r.t5, .pos-a.t5 { top: 5px }
+.pos-r.r5, .pos-a.r5 { right: 5px }
+.pos-r.b5, .pos-a.b5 { bottom: 5px }
+.pos-r.l5, .pos-a.l5 { left: 5px }
+
+.pos-r.t10, .pos-a.t10 { top: 10px }
+.pos-r.r10, .pos-a.r10 { right: 10px }
+.pos-r.b10, .pos-a.b10 { bottom: 10px }
+.pos-r.l10, .pos-a.l10 { left: 10px }
+
+.pos-r.t20, .pos-a.t20 { top: 20px }
+.pos-r.r20, .pos-a.r20 { right: 20px }
+.pos-r.b20, .pos-a.b20 { bottom: 20px }
+.pos-r.l20, .pos-a.l20 { left: 20px }
+
+/* opacity
+ * =================================== */
+.op100 { opacity: 100% }
+.op50 { opacity: 50% }
+.op25 { opacity: 25% }
+.op10 { opacity: 10% }
